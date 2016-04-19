@@ -11,8 +11,8 @@ from collections import defaultdict
 
 def scrape_menu(business_id):
     '''
-    INPUT:
-    OUTPUT:
+    INPUT: Yelp business id (string)
+    OUTPUT: HTML from business menu page
 
     '''
     link = 'https://www.yelp.com/menu/{0}'.format(business_id) ## need some error checking here
@@ -20,6 +20,10 @@ def scrape_menu(business_id):
     return requests.get(link)
 
 def get_menu_items(page):
+    '''
+    INPUT: menu page HTML
+    OUTPUT: menu dictionary with lists of items and item descriptions
+    '''
     soup = BeautifulSoup(page.content)
     menu = defaultdict(list)
     for ms in soup.select('.menu-item-details'):
@@ -36,6 +40,10 @@ def get_menu_items(page):
 
 
 def get_num_response_pages(client):
+    '''
+    INPUT: Authenticated Yelp client
+    OUTPUT: Number of pages in response (int)
+    '''
     params = {
         'term' : 'restaurants'#,
         # 'sort' : 2,
@@ -46,6 +54,10 @@ def get_num_response_pages(client):
     return num_pages
 
 def get_business_ids(client, page):
+    '''
+    INPUT: Authenticated Yelp client, page number
+    OUTPUT: list of businesses (Yelp business object)
+    '''
     ## For every page of responses: get business ids
     params = {
     'term' : 'restaurants',
@@ -58,6 +70,12 @@ def get_business_ids(client, page):
     return response.businesses
 
 def add_to_database(businesses, db):
+    '''
+    INPUT: business objects (list), database
+    OUTPUT: None
+
+    Insert 1 entry for each restaurant in a mongoDB database.
+    '''
     for i, bus in enumerate(businesses):
         if bus.menu_date_updated: ## check menu available on Yelp
             cursor = db.restaurants.find({'bus_id': bus.id}).limit(1) ## check if already in db

@@ -4,6 +4,12 @@ import pickle
 from pymongo import MongoClient
 
 def get_recipe_info(recipe_id, api_key):
+    '''
+    INPUT: recipe ID number (int), API key (string)
+    OUTPUT: result object
+
+    Returns results from Food2Fork api call.
+    '''
     ## Gets the recipe info and stores in dict.
     payload  = {'key' : api_key, #creds['api-key'],
                        'rId': recipe_id
@@ -13,6 +19,13 @@ def get_recipe_info(recipe_id, api_key):
 
 
 def extract_info(json_obj):
+    '''
+    INPUT: result object (JSON)
+    OUTPUT: recipe entry (dict)
+
+    Extracts relevant info (ingredients, publisher, URLS) from api response and
+    prepares for storing.
+    '''
     recipe_dict = {}
     recipe_dict['rec_id'] = json_obj.json()['recipe']['recipe_id']
     recipe_dict['ingredients'] = json_obj.json()['recipe']['ingredients']
@@ -25,15 +38,36 @@ def extract_info(json_obj):
     return recipe_dict
 
 def write_to_json(filepath, dict_obj):
+    '''
+    INPUT: file, recipe dict object
+    OUTPUT: None
+
+    Writes recipe data to a JSON file. This function used before database was initialized.
+
+    '''
     with open(filepath, "a") as json_file:
 #         for line in dict_obj:
         json_file.write("{}\n".format(json.dumps(dict_obj)))
 
 def write_to_database(dict_obj, db):
+    '''
+    INPUT: recipe dict object, database connection
+    OUTPUT: None
+
+    Write recipe data dictionary object to mongoDB database.
+    '''
     db.recipes.insert_one(dict_obj)
 
 
 def run_pipeline(id_list, api_key, db):
+    '''
+    INPUT: recipe IDs (list), API key (string), database connection
+    OUTPUT: None
+
+    Queries Food2Fork API, extracts recipe info from response, and stores in
+    mongoDB.
+
+    '''
     for i, id_ in enumerate(id_list):
         result = get_recipe_info(id_, api_key)
         r_dict = extract_info(result)
