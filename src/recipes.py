@@ -90,6 +90,6 @@ if __name__ == '__main__':
         creds = json.load(cred)
 
     api_key = creds['api-key']
-    ids = id_list[1373:3873] ## update limits for what you want to call that day
+    ids = id_list[3873:6373] ## update limits for what you want to call that day
 
     run_pipeline(ids, api_key, db)
