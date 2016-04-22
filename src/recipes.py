@@ -49,14 +49,16 @@ def write_to_json(filepath, dict_obj):
 #         for line in dict_obj:
         json_file.write("{}\n".format(json.dumps(dict_obj)))
 
-def write_to_database(dict_obj, db):
+def write_to_database(recipe_dict, db):
     '''
     INPUT: recipe dict object, database connection
     OUTPUT: None
 
     Write recipe data dictionary object to mongoDB database.
     '''
-    db.recipes.insert_one(dict_obj)
+    cursor = db.restaurants.find({'rec_id': recipe_dict['rec_id']}).limit(1) ## check if already in db
+    if not cursor.count() > 0:
+        db.recipes.insert_one(recipe_dict)
 
 
 def run_pipeline(id_list, api_key, db):
@@ -90,6 +92,6 @@ if __name__ == '__main__':
         creds = json.load(cred)
 
     api_key = creds['api-key']
-    ids = id_list[3873:6373] ## update limits for what you want to call that day
+    ids = id_list[6373:8873] ## update limits for what you want to call that day
 
     run_pipeline(ids, api_key, db)

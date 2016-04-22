@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div>
+    <h1>Recipe Recommender</h1>
+    <p>Unsure what you want to make for dinner? Enter your favorite SF restaurant
+    and we'll make a recommendation for a recipe you might enjoy.</p>
+    <form action ="/results" method="post" name="submission">
+      <input type = 'text' name = 'input_text'>
+      <input type='submit' value='Recommend!'>
+    </form>
+
+  </div>
+{% endblock %}

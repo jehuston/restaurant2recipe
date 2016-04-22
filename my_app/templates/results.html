@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Try one of these: </h3>
+<ul>
+  {% for item in recs %}
+    <li><a href = "{{ item.source_url}}">{{ item.title }}</a>
+      <p>From {{ item.publisher }}</p></li> <!-- , item.image_url (css?)-->
+  {% endfor %}
+</ul>
+
+{% endblock %}
