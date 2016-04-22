@@ -1,8 +1,57 @@
 {% extends "base.html" %}
 
+
+
+{% block head %}
+<link href="{{ url_for('static', filename="css/bootstrap.min.css") }}" rel="stylesheet">
+<!-- Custom CSS -->
+<link href="{{ url_for('static', filename="css/full-width-pics.css") }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-  <div id="banner">
-    <h1>Recipe Recommender</h1>
-    <a href= '/submit'><input type = 'submit' value = 'Try it!'>
-  </div>
+
+  <!-- Full Width Image Header with Logo -->
+  <!-- Image backgrounds are set within the full-width-pics.css file. -->
+  <header class="image-bg-fluid-height">
+      <!-- <img class="img-responsive img-center" src="http://placehold.it/200x200&text=Logo" alt=""> -->
+  </header>
+
+  <!-- Content Section -->
+  <section>
+      <div class="container">
+          <div class="row">
+              <div class="col-lg-12">
+                  <h1 class="section-heading">Recipe Recommender</h1>
+                  <p class="lead section-lead">Unsure what to make for dinner tonight?</p>
+                  <p class="section-paragraph">Recipe Recommender can take the menu from your favorite restaurant and through text mining, recommend a number of recipes you might enjoy. Give us a try!</p>
+                  <a href= '/submit'><input type = 'submit' value = 'Try it!'>
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <!-- Fixed Height Image Aside -->
+  <!-- Image backgrounds are set within the full-width-pics.css file. -->
+  <aside class="image-bg-fixed-height"></aside>
+
+
+
+  <!-- Footer -->
+  <footer>
+      <div class="container">
+          <div class="row">
+              <div class="col-lg-12">
+                  <p>Copyright &copy; Jane Huston 2016</p>
+              </div>
+          </div>
+          <!-- /.row -->
+      </div>
+      <!-- /.container -->
+  </footer>
+
+  <!-- jQuery -->
+  <script src="static/js/jquery.js"></script>
+
+  <!-- Bootstrap Core JavaScript -->
+  <script src="static/js/bootstrap.min.js"></script>
 {% endblock %}

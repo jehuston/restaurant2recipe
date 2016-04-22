@@ -1,14 +1,58 @@
 {% extends "base.html" %}
 
-{% block content %}
-  <div>
-    <h1>Recipe Recommender</h1>
-    <p>Unsure what you want to make for dinner? Enter your favorite SF restaurant
-    and we'll make a recommendation for a recipe you might enjoy.</p>
-    <form action ="/results" method="post" name="submission">
-      <input type = 'text' name = 'input_text'>
-      <input type='submit' value='Recommend!'>
-    </form>
+{% block head %}
+<link href="{{ url_for('static', filename="css/bootstrap.min.css") }}" rel="stylesheet">
+<!-- Custom CSS -->
+<link href="{{ url_for('static', filename="css/full-width-pics.css") }}" rel="stylesheet">
+{% endblock %}
 
-  </div>
+
+{% block content %}
+
+  <!-- Full Width Image Header with Logo -->
+  <!-- Image backgrounds are set within the full-width-pics.css file. -->
+  <header class="image-bg-fluid-height">
+      <!-- <img class="img-responsive img-center" src="http://placehold.it/200x200&text=Logo" alt=""> -->
+  </header>
+
+  <!-- Content Section -->
+  <section>
+      <div class="container">
+          <div class="row">
+              <div class="col-lg-12">
+                  <h1 class="section-heading">Try it!</h1>
+                  <p class="lead section-lead">Enter the name of a favorite SF restaurant:</p>
+                  <form action ="/results" method="post" name="submission">
+                    <input type = 'text' name = 'input_text'>
+                    <input type='submit' value='Recommend!'>
+                  </form>
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <!-- Fixed Height Image Aside -->
+  <!-- Image backgrounds are set within the full-width-pics.css file. -->
+  <aside class="image-bg-fixed-height"></aside>
+
+
+
+  <!-- Footer -->
+  <footer>
+      <div class="container">
+          <div class="row">
+              <div class="col-lg-12">
+                  <p>Copyright &copy; Jane Huston 2016</p>
+              </div>
+          </div>
+          <!-- /.row -->
+      </div>
+      <!-- /.container -->
+  </footer>
+
+  <!-- jQuery -->
+  <script src="static/js/jquery.js"></script>
+
+  <!-- Bootstrap Core JavaScript -->
+  <script src="static/js/bootstrap.min.js"></script>
 {% endblock %}
