@@ -8,6 +8,16 @@ app = Flask(__name__)
 def index():
     return render_template('index.html', title = 'Recipe Recommender')
 
+@app.route('/about')
+def about():
+    pass
+
+@app.route('/how-it-works')
+def methodology():
+    return render_template('howto_index.html')
+
+
+
 @app.route('/submit', methods = ['GET', 'POST'])
 def make_submission():
     ## need to enter a restaurant name from db to start
@@ -18,7 +28,7 @@ def make_submission():
 def result():
     ## compute recommendations
     restaurant_name = str(request.form['input_text'])
-    recs, scores = recommender.get_recommendations(restaurant_name, db, 5)
+    recs, scores = recommender.get_recommendations(restaurant_name, db, 6)
     recipes = []
     for recc in recs:
         recipe = db.recipes.find({'rec_id' : recc}, {'_id' :0, 'ingredients':0})

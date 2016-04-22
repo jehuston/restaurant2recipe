@@ -1,12 +1,95 @@
 {% extends "base.html" %}
 
+
+{% block head %}
+<link href="{{ url_for('static', filename="css/bootstrap.min.css") }}" rel="stylesheet">
+<!-- Custom CSS -->
+<link href="{{ url_for('static', filename="css/2-col-portfolio.css") }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<h3>Try one of these: </h3>
-<ul>
-  {% for item in recs %}
-    <li><a href = "{{ item.source_url}}">{{ item.title }}</a>
-      <p>From {{ item.publisher }}</p></li> <!-- , item.image_url (css?)-->
-  {% endfor %}
-</ul>
+<!-- Page Content -->
+<div class="container">
+
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">You might like:
+              <!--   <small>Secondary Text</small> -->
+            </h1>
+        </div>
+    </div>
+    <!-- /.row -->
+
+    {% for item in recs %}
+    <!-- Projects Row -->
+    <div class="row">
+        <div class="col-md-6 portfolio-item">
+            <a href="#">
+                <img class="img-responsive" src="{{item.image_url}}" alt="">
+            </a>
+            <h3>
+                <a href="{{ item.source_url }}">{{ item.title }}</a>
+            </h3>
+            <p>From {{ item.publisher }}</p>
+        </div>
+
+    {% endfor %}
+
+
+
+    <!-- <hr> -->
+
+    <!-- Pagination -->
+    <!--
+    <div class="row text-center">
+        <div class="col-lg-12">
+            <ul class="pagination">
+                <li>
+                    <a href="#">&laquo;</a>
+                </li>
+                <li class="active">
+                    <a href="#">1</a>
+                </li>
+                <li>
+                    <a href="#">2</a>
+                </li>
+                <li>
+                    <a href="#">3</a>
+                </li>
+                <li>
+                    <a href="#">4</a>
+                </li>
+                <li>
+                    <a href="#">5</a>
+                </li>
+                <li>
+                    <a href="#">&raquo;</a>
+                </li>
+            </ul>
+        </div>
+    </div> -->
+    <!-- /.row -->
+
+    <!-- <hr> -->
+
+    <!-- Footer -->
+<!--     <footer>
+        <div class="row">
+            <div class="col-lg-12">
+                <p>Copyright &copy; Jane Huston 2016</p>
+            </div>
+        </div> -->
+        <!-- /.row -->
+    <!-- </footer>
+
+</div> -->
+<!-- /.container -->
+
+<!-- jQuery -->
+<!-- <script src="static/js/jquery.js"></script> -->
+
+<!-- Bootstrap Core JavaScript -->
+<!-- <script src="static/js/bootstrap.min.js"></script> -->
 
 {% endblock %}
