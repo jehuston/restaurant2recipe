@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block head %}
+<link href="{{ url_for('static', filename="css/bootstrap.min.css") }}" rel="stylesheet">
+<style>
+.message {
+  margin-top: 100px;
+  margin-left: 50px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class= message>
+<h4>Sorry, that restaurant is not yet in our database. <a href='/submit'>Please try again!</a></h4>
+</div>
+{% endblock %}

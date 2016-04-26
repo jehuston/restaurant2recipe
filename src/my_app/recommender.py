@@ -6,7 +6,6 @@ from gensim import corpora, models, similarities
 from nltk.corpus import stopwords
 
 
-## need to create a shared stopwords set, dictionary, index, model --> maybe instance variables of the class?
 class MyRecommender():
     '''
     A class that will build take in text documents, build a dictionary and index, and
@@ -19,10 +18,12 @@ class MyRecommender():
         self.dictionary_len = 0
         self.index = None
         self.corpus = None
-        self.df = None ## Need df to get recipe ids back?
+        self.df = None ## Need df to get recipe ids back
 
+    ## tokenize function?
+        
     def _prepare_documents(self, db):
-        cursor = db.recipes.find({}, {'rec_id': 1, 'ingredients': 1, '_id' : 0}) 
+        cursor = db.recipes.find({}, {'rec_id': 1, 'ingredients': 1, '_id' : 0})
         self.df = pd.DataFrame(list(cursor))
         self.df['ingredients'] = self.df['ingredients'].apply(lambda x: " ".join(x))
         documents = self.df['ingredients'].values
@@ -37,6 +38,7 @@ class MyRecommender():
         ## Vectorize and store recipe text
         documents = self._prepare_documents(db)
         texts = [[word for word in document.lower().split() if word not in self.stopset] for document in documents]
+        ## Stem or Lemmatize?
         self.dictionary = corpora.Dictionary(texts)
         self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
 
@@ -56,7 +58,7 @@ class MyRecommender():
 
     def _vectorize_restaurant_menu(self, name, db):
         '''
-        INPUT: restaurant name (STRING), database connection, stopwords (LIST), dictionary object
+        INPUT: restaurant name (STRING), database connection
         OUTPUT: menu vector (ARRAY)
         '''
         ## Get 1 restaurant menu
@@ -69,13 +71,15 @@ class MyRecommender():
         menu_string = " ".join(menu_list)
 
         menu_tokens = [word for word in menu_string.lower().split() if word not in self.stopset]
+        ## Stem or Lemmatize?
+
         menu_vector = self.dictionary.doc2bow(menu_tokens)
         return menu_vector
 
     def fit(self, db):
         '''
-        INPUT:
-        OUTPUT:
+        INPUT: database connection
+        OUTPUT: None
         '''
         self._create_dictionary(db)
         self._create_model()
@@ -83,7 +87,7 @@ class MyRecommender():
 
     def get_recommendations(self, name, db, num):
         '''
-        INPUT: index (), menu vector (ARRAY), number (INT) of recommendations requested
+        INPUT: restaurant name (STR), database connection, number (INT) of recommendations requested
         OUTPUT: dataframe/series(?) of recommended recipes
         '''
         menu_vector = self._vectorize_restaurant_menu(name, db)

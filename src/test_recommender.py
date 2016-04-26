@@ -7,7 +7,7 @@ from nltk.corpus import stopwords
 
 
 ## need to create a shared stopwords set, dictionary, index, model --> maybe instance variables of the class?
-    
+
 def create_dictionary(documents):
     '''
     INPUT: text documents (array of strings)
@@ -19,6 +19,14 @@ def create_dictionary(documents):
     dictionary = corpora.Dictionary(texts)
     corpus = [dictionary.doc2bow(text) for text in texts] ## convert to BOW
     return dictionary, corpus # could write to disk instead?
+
+def use_word2vec(filename):
+    model = models.Word2Vec.load_word2vec_format(filename, binary=True)
+    return model
+
+## translate recipe data into word2vec vectors. Store somewhere.
+
+## vectorize restaurant menu and find most similar recipe vector.
 
 def create_model(corpus, dict_size): ## model should be passed in.
     '''
@@ -81,11 +89,16 @@ if __name__ == '__main__':
         dict_size +=1
     print dict_size
     #model = models.TfidfModel()
-    tfidf, index = create_model(corpus, dict_size)
+    #tfidf, index = create_model(corpus, dict_size)
     ## Need to do the above just once - when all recipes collected, can write to disk ##
     ## (see gensim docs)
 
-    menu_vec = vectorize_restaurant_menu(restaurant_name, db, dictionary)
-    recs, scores = get_recommendations(index, menu_vec, 5, tfidf, data)
-    print [result for result in zip(recs, scores)]
+    ## playing with Word2Vec
+    model = use_word2vec('../models/GoogleNews-vectors-negative300.bin.gz') #loads but slowwwly
+
+
+
+    # menu_vec = vectorize_restaurant_menu(restaurant_name, db, dictionary)
+    # recs, scores = get_recommendations(index, menu_vec, 5, tfidf, data)
+    # print [result for result in zip(recs, scores)]
     #print recs

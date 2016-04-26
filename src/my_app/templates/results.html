@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+<link href="{{ url_for('static', filename="css/bootstrap.min.css") }}" rel="stylesheet">
+<!-- Custom CSS -->
+<link href="{{ url_for('static', filename="css/2-col-portfolio.css") }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- Page Content -->
+<div class="container">
+
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">You might like:
+              <!--   <small>Secondary Text</small> -->
+            </h1>
+        </div>
+    </div>
+    <!-- /.row -->
+
+    {% for item in recs %}
+    <!-- Projects Row -->
+    <div class="row">
+        <div class="col-md-6 portfolio-item">
+            <a href="{{ item.source_url }}">
+                <img class="img-responsive" src="{{item.image_url}}" alt="{{ item.title }}">
+            </a>
+            <h3>
+                <a href="{{ item.source_url }}">{{ item.title }}</a>
+            </h3>
+            <p>From {{ item.publisher }}</p>
+        </div>
+
+    {% endfor %}
+
+
+{% endblock %}

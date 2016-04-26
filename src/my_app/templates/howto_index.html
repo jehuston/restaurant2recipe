@@ -27,22 +27,25 @@
 
         <!-- First Featurette -->
         <div class="featurette" id="about">
-            <img class="featurette-image img-circle img-responsive pull-right" src="http://placehold.it/500x500">
+            <img class="featurette-image img-circle img-responsive pull-right" src="/static/images/yelp-logo-large@3x.png">
             <h2 class="featurette-heading">Step One
                 <span class="text-muted">Collect the data</span>
             </h2>
-            <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+            <p class="lead">Recipe Recommender is backed by a database of recipes collected from the food2fork API.
+              San Francisco restaurant menu data were collected from Yelp.</p>
         </div>
 
         <hr class="featurette-divider">
 
         <!-- Second Featurette -->
         <div class="featurette" id="services">
-            <img class="featurette-image img-circle img-responsive pull-left" src="http://placehold.it/500x500">
+            <img class="featurette-image img-circle img-responsive pull-left" src="/static/images/gensim.png">
             <h2 class="featurette-heading">Step Two
                 <span class="text-muted">Featurize the text</span>
             </h2>
-            <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+            <p class="lead">Text from restaurant menu items and descriptions as well as recipe ingredient lists were
+            converted into numeric vectors using Tfidf, a method of numerically representing words in a document according to
+            how often they appear. I used the Python gensim module to make the conversion.</p>
         </div>
 
         <hr class="featurette-divider">
@@ -53,7 +56,8 @@
             <h2 class="featurette-heading">Step Three
                 <span class="text-muted">Calculate similarities</span>
             </h2>
-            <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+            <p class="lead">Once the text have been vectorized, I calculate the cosine similiarity to find the nearest
+            neighbors and return those recipes as suggestions.</p>
         </div>
 
         <hr class="featurette-divider">
