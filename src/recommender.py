@@ -22,7 +22,7 @@ class MyRecommender():
         self.df = None ## Need df to get recipe ids back?
 
     def _prepare_documents(self, db):
-        cursor = db.recipes.find({}, {'rec_id': 1, 'ingredients': 1, '_id' : 0}) 
+        cursor = db.recipes.find({}, {'rec_id': 1, 'ingredients': 1, '_id' : 0})
         self.df = pd.DataFrame(list(cursor))
         self.df['ingredients'] = self.df['ingredients'].apply(lambda x: " ".join(x))
         documents = self.df['ingredients'].values

@@ -16,10 +16,8 @@ def create_dictionary(documents):
     OUTPUT: gensim dictionary object, corpus
     '''
     ## Vectorize and store recipe text
-    stoplist = set(stopwords.words('english'))
-    texts = [[word for word in document.lower().split() if word not in stoplist] for document in documents]
-    dictionary = corpora.Dictionary(texts)
-    corpus = [dictionary.doc2bow(text) for text in texts] ## convert to BOW
+    dictionary = corpora.Dictionary(documents)
+    corpus = [dictionary.doc2bow(doc) for doc in documents] ## convert to BOW
     return dictionary, corpus # could write to disk instead?
 
 def use_word2vec(filename):
@@ -41,7 +39,7 @@ def create_model(corpus, dict_size): ## model should be passed in.
     index = similarities.SparseMatrixSimilarity(model[corpus], num_features = dict_size) # num_features is len of dictionary
     return model, index
 
-def get_restaurant_menu(name, db, dictionary):
+def get_restaurant_menu(name, db):
     '''
     INPUT: restaurant name (STRING), database connection, stopwords (LIST), dictionary object
     OUTPUT: menu vector (ARRAY)
@@ -99,33 +97,38 @@ if __name__ == '__main__':
     data = pd.DataFrame(list(cursor))
     data['ingredients'] = data['ingredients'].apply(lambda x: " ".join(x))
     documents = data['ingredients'].values
-    #dictionary, corpus = create_dictionary(documents)
-    #print documents[:5]
 
     recipe_array = clean_text(documents)
-    #print texts_array[:2]
+    # print type(recipe_array)
+    # print type(recipe_array[1])
 
-    # dict_size = 0
-    # for i in dictionary.iterkeys():
-    #     dict_size +=1
-    # print dict_size
+    dictionary, corpus = create_dictionary(recipe_array)
+
+
+    dict_size = 0
+    for i in dictionary.iterkeys():
+        dict_size +=1
+    print dict_size
     #model = models.TfidfModel()
-    #tfidf, index = create_model(corpus, dict_size)
+    tfidf, index = create_model(corpus, dict_size)
     ## Need to do the above just once - when all recipes collected, can write to disk ##
     ## (see gensim docs)
 
-    ## playing with Word2Vec
-    model = use_word2vec('/home/ec2-user/mnt/GoogleNews-vectors-negative300.bin.gz') #loads but slowwwly
-    print model[recipe_array[1]]
-    #index = similarities.Similarity(model[recipe_array])
-    print 'Done!'
-    ## save index to disk for speed?
+    # ## playing with Word2Vec
+    # model = use_word2vec('/home/ec2-user/mnt/GoogleNews-vectors-negative300.bin.gz') #loads but slowwwly
+    # #print model[recipe_array[1]]
+    # index = similarities.Similarity(model[recipe_array])
+    # print 'Done with recipe vectors!'
+    # ## save index to disk for speed?
 
-    #menu_string = get_restaurant_menu(restaurant_name, db)
-    # recs, scores = get_recommendations(index, menu_vec, 5, tfidf, data)
-    # print [result for result in zip(recs, scores)]
-    #print recs
-    #menu_array = clean_text([menu_string])
-    #sims = index[model[menu_vector]] ## convert BOW to word vectors
-    #rec_indices = np.argsort(sims)[:-5:-1] # gets top 5
-    #print data.loc[rec_indices, 'title'], sims[rec_indices]
+    menu_string = get_restaurant_menu(restaurant_name, db)
+    menu_tokens = clean_text([menu_string])
+    menu_array = dictionary.doc2bow(menu_tokens)
+
+    sims = index[model[menu_array]] ## convert BOW to word vectors
+    rec_indices = np.argsort(sims)[:-5:-1] # gets top 5
+    print data.loc[rec_indices, 'title'], sims[rec_indices]
+
+    # # recs, scores = get_recommendations(index, menu_vec, 5, tfidf, data)
+    # # print [result for result in zip(recs, scores)]
+    # #print recs
