@@ -21,7 +21,7 @@ class MyRecommender():
         self.df = None ## Need df to get recipe ids back
 
     ## tokenize function?
-        
+
     def _prepare_documents(self, db):
         cursor = db.recipes.find({}, {'rec_id': 1, 'ingredients': 1, '_id' : 0})
         self.df = pd.DataFrame(list(cursor))
@@ -92,7 +92,7 @@ class MyRecommender():
         '''
         menu_vector = self._vectorize_restaurant_menu(name, db)
         sims = self.index[self.model[menu_vector]] ## convert BOW to Tfidf
-        rec_indices = np.argsort(sims)[:-num:-1] # gets top n
+        rec_indices = np.argsort(sims)[:-(num+1):-1] # gets top n
         return self.df.loc[rec_indices, 'rec_id'], sims[rec_indices]
 
 ## THIS WORKS!!!!!!!!!!!!!!!!1!!1!!!
