@@ -22,7 +22,7 @@ class MyRecommender():
         self.df = None ## Need df to get recipe ids back?
 
     def _prepare_documents(self, db):
-        cursor = db.recipes.find({}, {'rec_id': 1, 'ingredients': 1, '_id' : 0})
+        cursor = db.recipes.find({}, {'rec_id': 1, 'title' : 1, 'ingredients': 1, '_id' : 0})
         self.df = pd.DataFrame(list(cursor))
         self.df['ingredients'] = self.df['ingredients'].apply(lambda x: " ".join(x))
         documents = self.df['ingredients'].values
@@ -89,7 +89,7 @@ class MyRecommender():
         menu_vector = self._vectorize_restaurant_menu(name, db)
         sims = self.index[self.model[menu_vector]] ## convert BOW to Tfidf
         rec_indices = np.argsort(sims)[:-num:-1] # gets top n
-        return self.df.loc[rec_indices, 'rec_id'], sims[rec_indices]
+        return self.df.loc[rec_indices, 'title'], sims[rec_indices]
 
 ## THIS WORKS!!!!!!!!!!!!!!!!1!!1!!!
 
@@ -106,5 +106,5 @@ if __name__ == '__main__':
     ## (see gensim docs)
 
     recs, scores = recommender.get_recommendations(restaurant_name, db, 5)
-    #print [result for result in zip(recs, scores)]
-    print recs
+    print [result for result in zip(recs, scores)]
+    #print recs
