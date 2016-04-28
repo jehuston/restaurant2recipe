@@ -5,7 +5,7 @@ import string
 from pymongo import MongoClient
 from gensim import corpora, models, similarities
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+from nltk.stem import WordNetLemmatizer, PorterStemmer
 
 
 ## need to create a shared stopwords set, dictionary, index, model --> maybe instance variables of the class?
@@ -19,14 +19,6 @@ def create_dictionary(documents):
     dictionary = corpora.Dictionary(documents)
     corpus = [dictionary.doc2bow(doc) for doc in documents] ## convert to BOW
     return dictionary, corpus # could write to disk instead?
-
-def use_word2vec(filename):
-    model = models.Word2Vec.load_word2vec_format(filename, binary=True)
-    return model
-
-## translate recipe data into word2vec vectors. Store somewhere.
-
-## vectorize restaurant menu and find most similar recipe vector.
 
 def create_model(corpus, dict_size): ## model should be passed in.
     '''
@@ -67,12 +59,34 @@ def clean_text(documents):
     stopset = set(stopwords.words('english'))
     stopset.update(['description', 'available']) ## add some words that appear a lot in menu data
     wnl = WordNetLemmatizer()
+    port = PorterStemmer()
     texts = [[wnl.lemmatize(word.strip(string.punctuation)) for word in\
                 document.lower().replace("/", "").split()\
                 if word not in stopset if not any(c.isdigit() for c in word)]\
             for document in documents]    ## this is hideous
     text_array = np.array(texts)
     return text_array
+
+def create_doc_vectors(model, text_array):
+    '''
+    INPUT: tokenized text documents (array of strings)
+    OUTPUT: document vectors
+    '''
+    doc_vectors = []
+    for i in xrange(text_array.shape[0]):
+        doc_vector = np.zeros((300,))
+        for j in xrange(len(text_array[i])):
+            try:
+                doc_vector += model[text_array[i][j]]
+            except KeyError:
+                continue
+        doc_vectors.append(doc_vector)
+    return np.array(doc_vectors)
+
+def create_index(doc_vectors):
+    ## make index of document vectors
+    index = similarities.Similarity('models/recipe_index', doc_vectors, num_features = 300)
+    return index
 
 def get_recommendations(index, menu_vector, num, model, df):
     '''
@@ -92,40 +106,31 @@ if __name__ == '__main__':
     conn = MongoClient()
     db = conn.project
 
-    ## Get Recipe data
-    cursor = db.recipes.find({}, {'title': 1, 'ingredients': 1, '_id' : 0})
+    # Get Recipe data
+    cursor = db.recipes.find({}, {'title': 1, 'ingredients': 1, '_id' : 0}).limit(1000)
     data = pd.DataFrame(list(cursor))
     data['ingredients'] = data['ingredients'].apply(lambda x: " ".join(x))
     documents = data['ingredients'].values
 
     recipe_array = clean_text(documents)
-    # print type(recipe_array)
-    # print type(recipe_array[1])
+    # # #print recipe_array.shape
+    #
+    # # ## playing with Word2Vec
+    model = models.Word2Vec.load_word2vec_format('/home/ec2-user/mnt/GoogleNews-vectors-negative300.bin.gz', binary=True)
+    model.init_sims(replace=True)
+    # #print model.similarity('potato', 'tomato')
 
-    dictionary, corpus = create_dictionary(recipe_array)
+    recipe_vectors = create_doc_vectors(model, recipe_array)
+    recipe_index = create_index(recipe_vectors)
 
-
-    dict_size = 0
-    for i in dictionary.iterkeys():
-        dict_size +=1
-    print dict_size
-    #model = models.TfidfModel()
-    tfidf, index = create_model(corpus, dict_size)
-    ## Need to do the above just once - when all recipes collected, can write to disk ##
-    ## (see gensim docs)
-
-    # ## playing with Word2Vec
-    # model = use_word2vec('/home/ec2-user/mnt/GoogleNews-vectors-negative300.bin.gz') #loads but slowwwly
-    # #print model[recipe_array[1]]
-    # index = similarities.Similarity(model[recipe_array])
-    # print 'Done with recipe vectors!'
-    # ## save index to disk for speed?
-
+    ## translate menu into doc_vector
     menu_string = get_restaurant_menu(restaurant_name, db)
-    menu_tokens = clean_text([menu_string])
-    menu_array = dictionary.doc2bow(menu_tokens)
-
-    sims = index[model[menu_array]] ## convert BOW to word vectors
+    menu_array = clean_text([menu_string])
+    #print menu_array[0]
+    menu_vector = create_doc_vectors(model, menu_array)[0]
+    #print menu_vector
+    #recipe_index = similarities.Similarity.load('models/recipe_index.0')
+    sims = recipe_index[menu_vector]
     rec_indices = np.argsort(sims)[:-5:-1] # gets top 5
     print data.loc[rec_indices, 'title'], sims[rec_indices]
 
