@@ -152,7 +152,7 @@ if __name__ == '__main__':
     #print menu_vector
     #recipe_index = similarities.Similarity.load('models/recipe_index.0')
     sims = recipe_index[menu_vector]
-    rec_indices = np.argsort(sims)[:-5:-1] # gets top 5
+    rec_indices = np.argsort(sims)[:-6:-1] # gets top 5
     print data.loc[rec_indices, 'title'], sims[rec_indices]
 
     # recs, scores = get_recommendations(index, menu_vec, 5, tfidf, data)
