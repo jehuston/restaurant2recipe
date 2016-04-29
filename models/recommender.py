@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import sys
+import string
 from pymongo import MongoClient
 from gensim import corpora, models, similarities
 from nltk.corpus import stopwords
-
+from nltk.stem import WordNetLemmatizer
 
 ## need to create a shared stopwords set, dictionary, index, model --> maybe instance variables of the class?
 class MyRecommender():
@@ -12,7 +13,8 @@ class MyRecommender():
     A class that will build take in text documents, build a dictionary and index, and
     return recommendations from that index upon new input.
     '''
-    def __init__(self):
+    def __init__(self, model):
+        self.model = model
         self.stopset = set(stopwords.words('english'))
         self.stopset.update(['description', 'available']) ## add some words that appear a lot in menu data
         self.dictionary = None
@@ -28,6 +30,27 @@ class MyRecommender():
         documents = self.df['ingredients'].values
         return documents
 
+    def _clean_text(self, documents):
+        '''
+        INPUT: array of strings
+        OUTPUT: array of lists (ok?)
+        '''
+        stopset = set(stopwords.words('english'))
+        stopset.update(['description', 'available']) ## add some words that appear a lot in menu data
+        wnl = WordNetLemmatizer()
+        texts = []
+
+        for doc in documents:
+            words = doc.lower().split()
+            tokens = []
+            for word in words:
+                if word not in stopset and not any(c.isdigit() for c in word): #filter stopwords and numbers
+                    token = wnl.lemmatize(word.strip(string.punctuation))
+                    tokens.append(token)
+            texts.append(tokens)
+
+        text_array = np.array(texts)
+        return text_array
 
     def _create_dictionary(self, db):
         '''
@@ -36,20 +59,20 @@ class MyRecommender():
         '''
         ## Vectorize and store recipe text
         documents = self._prepare_documents(db)
-        texts = [[word for word in document.lower().split() if word not in self.stopset] for document in documents]
+        texts = self._clean_text(documents)
         self.dictionary = corpora.Dictionary(texts)
         self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
 
         for i in self.dictionary.iterkeys():
             self.dictionary_len +=1
 
-    def _create_model(self): ## how to make extendable to other models?
+    def _create_model(self):
         '''
         INPUT: Model class, corpus (ARRAY)
         OUTPUT: trained model, index (for similarity scoring)
         '''
         ## Apply model
-        self.model = models.TfidfModel(self.corpus)
+        self.model = self.model(self.corpus)
         ## prepare for similarity queries - unlikely to be memory constrained (< 100K docs) so won't write to disk
         self.index = similarities.SparseMatrixSimilarity(self.model[self.corpus], num_features = self.dictionary_len) # num_features is len of dictionary
         #return model, index
@@ -68,14 +91,14 @@ class MyRecommender():
         menu_list = [" ".join(i) for i in zip(menu['items'], menu['descriptions'])]
         menu_string = " ".join(menu_list)
 
-        menu_tokens = [word for word in menu_string.lower().split() if word not in self.stopset]
+        menu_tokens = self._clean_text([menu_string])[0]
         menu_vector = self.dictionary.doc2bow(menu_tokens)
         return menu_vector
 
     def fit(self, db):
         '''
-        INPUT:
-        OUTPUT:
+        INPUT: connection to database with recipes, restaurants data
+        OUTPUT: fit model, index
         '''
         self._create_dictionary(db)
         self._create_model()
@@ -85,6 +108,8 @@ class MyRecommender():
         '''
         INPUT: index (), menu vector (ARRAY), number (INT) of recommendations requested
         OUTPUT: dataframe/series(?) of recommended recipes
+
+        Returns top n recommended recipes based on cosine similiarity to restaurant menu.
         '''
         menu_vector = self._vectorize_restaurant_menu(name, db)
         sims = self.index[self.model[menu_vector]] ## convert BOW to Tfidf
@@ -100,7 +125,8 @@ if __name__ == '__main__':
     conn = MongoClient()
     db = conn.project
 
-    recommender = MyRecommender()
+    model = models.TfidfModel
+    recommender = MyRecommender(model)
     recommender.fit(db)
     ## Need to do the above just once - when all recipes collected, can write to disk ##
     ## (see gensim docs)

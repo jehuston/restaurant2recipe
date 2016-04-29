@@ -78,7 +78,7 @@ def clean_text(documents):
     text_array = np.array(texts)
     return text_array
 
-def create_doc_vectors(model, text_array):
+def create_doc_vectors(model, text_array): ## this is much more complicated than TfIDF
     '''
     INPUT: tokenized text documents (array of strings)
     OUTPUT: document vectors
@@ -106,7 +106,7 @@ def create_index(doc_vectors):
 
     Makes a searchable index of document vectors and saves to disk.
     '''
-    index = similarities.Similarity('models/recipe_index', doc_vectors, num_features = 300)
+    index = similarities.SparseMatrixSimilarity('models/recipe_index', doc_vectors, num_features = 300)
     return index
 
 def get_recommendations(index, menu_vector, num, model, df):
@@ -137,23 +137,29 @@ if __name__ == '__main__':
     #print recipe_array
     #
     # # ## playing with Word2Vec
-    model = models.Word2Vec.load_word2vec_format('/home/ec2-user/vectors/GoogleNews-vectors-negative300.bin.gz', binary=True)
+    ## AWS location
+    #model = models.Word2Vec.load_word2vec_format('/home/ec2-user/vectors/GoogleNews-vectors-negative300.bin.gz', binary=True)
+    ## local location
+    model = models.Word2Vec.load_word2vec_format('word-vectors/GoogleNews-vectors-negative300.bin.gz', binary=True)
     model.init_sims(replace=True)
-    # # #print model.similarity('potato', 'tomato')
+    #print model.similarity('potato', 'tomato')
 
+    # first time:
     recipe_vectors = create_doc_vectors(model, recipe_array)
     recipe_index = create_index(recipe_vectors)
-    #
-    # ## translate menu into doc_vector
-    menu_string = get_restaurant_menu(restaurant_name, db)
-    menu_array = clean_text([menu_string])
-    #print menu_array[0]
-    menu_vector = create_doc_vectors(model, menu_array)[0]
-    #print menu_vector
-    #recipe_index = similarities.Similarity.load('models/recipe_index.0')
-    sims = recipe_index[menu_vector]
-    rec_indices = np.argsort(sims)[:-6:-1] # gets top 5
-    print data.loc[rec_indices, 'title'], sims[rec_indices]
+
+    ## subsequent:
+    # recipe_index = load('models/recipe_index')
+
+    ## translate menu into doc_vector
+    # menu_string = get_restaurant_menu(restaurant_name, db)
+    # menu_array = clean_text([menu_string])
+    # #print menu_array[0]
+    # menu_vector = create_doc_vectors(model, menu_array)[0]
+    # #print menu_vector
+    # sims = recipe_index[menu_vector]
+    # rec_indices = np.argsort(sims)[:-6:-1] # gets top 5
+    # print data.loc[rec_indices, 'title'], sims[rec_indices]
 
     # recs, scores = get_recommendations(index, menu_vec, 5, tfidf, data)
     # print [result for result in zip(recs, scores)]
