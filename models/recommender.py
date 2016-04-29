@@ -24,6 +24,13 @@ class MyRecommender():
         self.df = None ## Need df to get recipe ids back?
 
     def _prepare_documents(self, db):
+        '''
+        INPUT: database connection
+        OUTPUT: array of strings
+
+        Given database connection, collect all recipe documents, join ingredients lists
+        into strings, and return as array.
+        '''
         cursor = db.recipes.find({}, {'rec_id': 1, 'title' : 1, 'ingredients': 1, '_id' : 0})
         self.df = pd.DataFrame(list(cursor))
         self.df['ingredients'] = self.df['ingredients'].apply(lambda x: " ".join(x))
@@ -34,6 +41,8 @@ class MyRecommender():
         '''
         INPUT: array of strings
         OUTPUT: array of lists (ok?)
+
+        Given array of strings (recipes or restaurant menus), tokenize and return as array.
         '''
         stopset = set(stopwords.words('english'))
         stopset.update(['description', 'available']) ## add some words that appear a lot in menu data
@@ -56,6 +65,8 @@ class MyRecommender():
         '''
         INPUT: text documents (array of strings)
         OUTPUT: gensim dictionary object, corpus
+
+        Create a dictionary mapping of words in corpus.
         '''
         ## Vectorize and store recipe text
         documents = self._prepare_documents(db)
@@ -70,6 +81,9 @@ class MyRecommender():
         '''
         INPUT: Model class, corpus (ARRAY)
         OUTPUT: trained model, index (for similarity scoring)
+
+        Create a model using the collection of documents (corpus). Create an index
+        to query against to find similar documents.
         '''
         ## Apply model
         self.model = self.model(self.corpus)
@@ -79,8 +93,11 @@ class MyRecommender():
 
     def _vectorize_restaurant_menu(self, name, db):
         '''
-        INPUT: restaurant name (STRING), database connection, stopwords (LIST), dictionary object
+        INPUT: restaurant name (STRING), database connection
         OUTPUT: menu vector (ARRAY)
+
+        Given restaurant name that exists in database, return menu and vectorize to
+        prepare for similarity query.
         '''
         ## Get 1 restaurant menu
         cursor = db.restaurants.find_one({'name' : name})
@@ -99,6 +116,10 @@ class MyRecommender():
         '''
         INPUT: connection to database with recipes, restaurants data
         OUTPUT: fit model, index
+
+        Creates a dictionary and model for recommender system. Given database connection,
+        find all recipe ingredient lists, vectorize, build corpus and dictionary,
+        fit model and create index.
         '''
         self._create_dictionary(db)
         self._create_model()

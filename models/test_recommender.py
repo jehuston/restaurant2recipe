@@ -139,10 +139,6 @@ if __name__ == '__main__':
     recipe_vectors = create_doc_vectors(model, recipe_array)
     recipe_index = create_index(recipe_vectors)
 
-    ## translate menu into doc_vector
-    # menu_string = get_restaurant_menu(restaurant_name, db)
-    # menu_array = clean_text([menu_string])
-    # menu_vector = create_doc_vectors(model, menu_array)[0]
     ## get recommendations
     results = get_recommendations(restaurant_name, db, recipe_index, model, 5, data)
     print results
