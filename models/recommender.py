@@ -1,11 +1,9 @@
 import pandas as pd
 import numpy as np
 import sys
-import string
 from pymongo import MongoClient
 from gensim import corpora, models, similarities
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 
 
 ## need to create a shared stopwords set, dictionary, index, model --> maybe instance variables of the class?
@@ -24,37 +22,12 @@ class MyRecommender():
         self.df = None ## Need df to get recipe ids back?
 
     def _prepare_documents(self, db):
-        '''
-        INPUT: database connection
-        OUTPUT: array of strings
-        '''
         cursor = db.recipes.find({}, {'rec_id': 1, 'title' : 1, 'ingredients': 1, '_id' : 0})
         self.df = pd.DataFrame(list(cursor))
         self.df['ingredients'] = self.df['ingredients'].apply(lambda x: " ".join(x))
         documents = self.df['ingredients'].values
         return documents
 
-    def _clean_text(self, documents):
-        '''
-        INPUT: array of strings
-        OUTPUT: array of lists of tokenized words (ok?)
-        '''
-        stopset = set(stopwords.words('english'))
-        stopset.update(['description', 'available']) ## add some words that appear a lot in menu data
-        wnl = WordNetLemmatizer()
-        texts = []
-        for doc in documents:
-            words = doc.lower().split()
-            tokens = []
-            for word in words:
-                if word not in stopset and not any(c.isdigit() for c in word): #filter stopwords and numbers
-                    token = wnl.lemmatize(word.strip(string.punctuation))
-                    tokens.append(token)
-            texts.append(tokens)
-
-
-        text_array = np.array(texts)
-        return text_array
 
     def _create_dictionary(self, db):
         '''
@@ -63,7 +36,7 @@ class MyRecommender():
         '''
         ## Vectorize and store recipe text
         documents = self._prepare_documents(db)
-        texts = self._clean_text(documents)
+        texts = [[word for word in document.lower().split() if word not in self.stopset] for document in documents]
         self.dictionary = corpora.Dictionary(texts)
         self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
 
