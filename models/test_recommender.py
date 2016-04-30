@@ -63,8 +63,6 @@ def get_restaurant_menu(name, db):
     INPUT: restaurant name (STRING), database connection, stopwords (LIST), dictionary object
     OUTPUT: menu vector (ARRAY)
     '''
-    stopset = set(stopwords.words('english'))
-    stopset.update(['description', 'available']) ## add some words that appear a lot in menu data
     ## Get 1 restaurant menu
     cursor = db.restaurants.find_one({'name' : name})
     menu = cursor['menu']

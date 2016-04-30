@@ -7,7 +7,6 @@ from gensim import corpora, models, similarities
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-## need to create a shared stopwords set, dictionary, index, model --> maybe instance variables of the class?
 class MyRecommender():
     '''
     A class that will build take in text documents, build a dictionary and index, and
@@ -21,7 +20,7 @@ class MyRecommender():
         self.dictionary_len = 0
         self.index = None
         self.corpus = None
-        self.df = None ## Need df to get recipe ids back?
+        self.df = None
 
     def _prepare_documents(self, db):
         '''
@@ -71,13 +70,17 @@ class MyRecommender():
         ## Vectorize and store recipe text
         documents = self._prepare_documents(db)
         texts = self._clean_text(documents)
-        self.dictionary = corpora.Dictionary(texts)
-        self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
 
-        for i in self.dictionary.iterkeys():
-            self.dictionary_len +=1
+        if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
+            self.dictionary = corpora.Dictionary(texts)
+            self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
 
-    def _create_model(self):
+            for i in self.dictionary.iterkeys():
+                self.dictionary_len +=1
+        else: #word2vec
+            self.corpus = self._create_doc_vectors(texts)
+
+    def _create_model(self): ## need if word2vec/else tfidf
         '''
         INPUT: Model class, corpus (ARRAY)
         OUTPUT: trained model, index (for similarity scoring)
@@ -85,11 +88,36 @@ class MyRecommender():
         Create a model using the collection of documents (corpus). Create an index
         to query against to find similar documents.
         '''
-        ## Apply model
-        self.model = self.model(self.corpus)
-        ## prepare for similarity queries - unlikely to be memory constrained (< 100K docs) so won't write to disk
-        self.index = similarities.SparseMatrixSimilarity(self.model[self.corpus], num_features = self.dictionary_len) # num_features is len of dictionary
-        #return model, index
+        if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
+            self.model = self.model(self.corpus)
+            ## prepare for similarity queries
+            self.index = similarities.SparseMatrixSimilarity(self.model[self.corpus], num_features = self.dictionary_len)
+        else: #word2vec
+            doc_vectors = self._create_doc_vectors(self.corpus)
+            self.model.load(filepath, mmap='r')
+            self.index = similarities.Similarity('/mnt/word2vec/index', doc_vectors, num_features = 300)
+
+
+    def _create_doc_vectors(self, text_array): ## word2vec only
+        '''
+        INPUT: tokenized text documents (array of strings)
+        OUTPUT: document vectors
+
+        Translates words/tokens into word vectors, sums to create document vectors.
+        '''
+        doc_vectors = []
+        unfound_words = 0
+        for i in xrange(text_array.shape[0]):
+            doc_vector = np.zeros((300,))
+            for j in xrange(len(text_array[i])):
+                try:
+                    doc_vector += self.model[text_array[i][j]]
+                except KeyError: #if word not in word vectors, skip it
+                    unfound_words += 1
+                    continue
+            doc_vectors.append(doc_vector)
+        print "Num words not found: ", unfound_words
+        return np.array(doc_vectors)
 
     def _vectorize_restaurant_menu(self, name, db):
         '''
@@ -97,7 +125,7 @@ class MyRecommender():
         OUTPUT: menu vector (ARRAY)
 
         Given restaurant name that exists in database, return menu and vectorize to
-        prepare for similarity query.
+        prepare for similarity query. -- needs if word2vec / else tfidf
         '''
         ## Get 1 restaurant menu
         cursor = db.restaurants.find_one({'name' : name})
@@ -109,7 +137,11 @@ class MyRecommender():
         menu_string = " ".join(menu_list)
 
         menu_tokens = self._clean_text([menu_string])[0]
-        menu_vector = self.dictionary.doc2bow(menu_tokens)
+        if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
+            menu_vector = self.dictionary.doc2bow(menu_tokens)
+            menu_vector = self.model[menu_vector]
+        else:
+            menu_vector = self._create_doc_vectors([menu_tokens])[0]
         return menu_vector
 
     def fit(self, db):
@@ -121,7 +153,8 @@ class MyRecommender():
         find all recipe ingredient lists, vectorize, build corpus and dictionary,
         fit model and create index.
         '''
-        self._create_dictionary(db)
+        if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
+            self._create_dictionary(db) #tfidf only
         self._create_model()
 
 
@@ -133,11 +166,10 @@ class MyRecommender():
         Returns top n recommended recipes based on cosine similiarity to restaurant menu.
         '''
         menu_vector = self._vectorize_restaurant_menu(name, db)
-        sims = self.index[self.model[menu_vector]] ## convert BOW to Tfidf
+        sims = self.index[self.model[menu_vector]]
         rec_indices = np.argsort(sims)[:-(num+1):-1] # gets top n
         return self.df.loc[rec_indices, 'title'], sims[rec_indices]
 
-## THIS WORKS!!!!!!!!!!!!!!!!1!!1!!!
 
 if __name__ == '__main__':
 
@@ -146,12 +178,12 @@ if __name__ == '__main__':
     conn = MongoClient()
     db = conn.project
 
-    model = models.TfidfModel
+    #model = models.TfidfModel
+    model = models.Word2Vec
     recommender = MyRecommender(model)
-    recommender.fit(db)
-    ## Need to do the above just once - when all recipes collected, can write to disk ##
-    ## (see gensim docs)
+    #recommender.fit(db)
 
-    recs, scores = recommender.get_recommendations(restaurant_name, db, 5)
-    print [result for result in zip(recs, scores)]
+
+    #recs, scores = recommender.get_recommendations(restaurant_name, db, 5)
+    #print [result for result in zip(recs, scores)]
     #print recs
