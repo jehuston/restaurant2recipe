@@ -60,44 +60,6 @@ class MyRecommender():
         text_array = np.array(texts)
         return text_array
 
-    def _create_dictionary(self, db):
-        '''
-        INPUT: text documents (array of strings)
-        OUTPUT: gensim dictionary object, corpus
-
-        Create a dictionary mapping of words in corpus.
-        '''
-        ## Vectorize and store recipe text
-        documents = self._prepare_documents(db)
-        texts = self._clean_text(documents)
-
-        if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
-            self.dictionary = corpora.Dictionary(texts)
-            self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
-
-            for i in self.dictionary.iterkeys():
-                self.dictionary_len +=1
-        else: #word2vec
-            self.corpus = self._create_doc_vectors(texts)
-
-    def _create_model(self): ## need if word2vec/else tfidf
-        '''
-        INPUT: Model class, corpus (ARRAY)
-        OUTPUT: trained model, index (for similarity scoring)
-
-        Create a model using the collection of documents (corpus). Create an index
-        to query against to find similar documents.
-        '''
-        if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
-            self.model = self.model(self.corpus)
-            ## prepare for similarity queries
-            self.index = similarities.SparseMatrixSimilarity(self.model[self.corpus], num_features = self.dictionary_len)
-        else: #word2vec
-            doc_vectors = self._create_doc_vectors(self.corpus)
-            self.model.load(filepath, mmap='r')
-            self.index = similarities.Similarity('/mnt/word2vec/index', doc_vectors, num_features = 300)
-
-
     def _create_doc_vectors(self, text_array): ## word2vec only
         '''
         INPUT: tokenized text documents (array of strings)
@@ -111,7 +73,7 @@ class MyRecommender():
             doc_vector = np.zeros((300,))
             for j in xrange(len(text_array[i])):
                 try:
-                    doc_vector += self.model[text_array[i][j]]
+                    doc_vector += self.model[text_array[i][j]] ##Throwing error?
                 except KeyError: #if word not in word vectors, skip it
                     unfound_words += 1
                     continue
@@ -153,9 +115,25 @@ class MyRecommender():
         find all recipe ingredient lists, vectorize, build corpus and dictionary,
         fit model and create index.
         '''
+        documents = self._prepare_documents(db)
+        texts = self._clean_text(documents)
+
         if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
-            self._create_dictionary(db) #tfidf only
-        self._create_model()
+            ## Vectorize and store recipe text
+            self.dictionary = corpora.Dictionary(texts)
+            self.corpus = [self.dictionary.doc2bow(text) for text in texts] ## convert to BOW
+
+            for i in self.dictionary.iterkeys():
+                self.dictionary_len +=1
+
+            self.model = self.model(self.corpus)
+            ## prepare for similarity queries
+            self.index = similarities.SparseMatrixSimilarity(self.model[self.corpus], num_features = self.dictionary_len)
+
+        else: # word2vec
+            self.model.load('/mnt/word2vec/words', mmap='r')
+            doc_vectors = self._create_doc_vectors(texts)
+            self.index = similarities.Similarity('/mnt/word2vec/index', doc_vectors, num_features = 300)
 
 
     def get_recommendations(self, name, db, num):
