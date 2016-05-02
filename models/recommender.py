@@ -99,11 +99,12 @@ class MyRecommender():
         menu_string = " ".join(menu_list)
 
         menu_tokens = self._clean_text([menu_string])[0]
+
         if self.model.__init__.im_class == models.tfidfmodel.TfidfModel:
             menu_vector = self.dictionary.doc2bow(menu_tokens)
             menu_vector = self.model[menu_vector]
         else:
-            menu_vector = self._create_doc_vectors([menu_tokens])[0]
+            menu_vector = self._create_doc_vectors(menu_tokens)[0]
         return menu_vector
 
     def fit(self, db):
@@ -131,7 +132,7 @@ class MyRecommender():
             self.index = similarities.SparseMatrixSimilarity(self.model[self.corpus], num_features = self.dictionary_len)
 
         else: # word2vec
-            self.model.load('/mnt/word2vec/words', mmap='r')
+            self.model = models.Word2Vec.load('/mnt/word2vec/words', mmap='r')
             doc_vectors = self._create_doc_vectors(texts)
             self.index = similarities.Similarity('/mnt/word2vec/index', doc_vectors, num_features = 300)
 
@@ -144,7 +145,7 @@ class MyRecommender():
         Returns top n recommended recipes based on cosine similiarity to restaurant menu.
         '''
         menu_vector = self._vectorize_restaurant_menu(name, db)
-        sims = self.index[self.model[menu_vector]]
+        sims = self.index[menu_vector]
         rec_indices = np.argsort(sims)[:-(num+1):-1] # gets top n
         return self.df.loc[rec_indices, 'title'], sims[rec_indices]
 
@@ -159,7 +160,7 @@ if __name__ == '__main__':
     #model = models.TfidfModel
     model = models.Word2Vec
     recommender = MyRecommender(model)
-    #recommender.fit(db)
+    recommender.fit(db)
 
 
     #recs, scores = recommender.get_recommendations(restaurant_name, db, 5)
