@@ -25,8 +25,8 @@ def make_submission():
 @app.route('/results', methods = ['GET', 'POST'])
 def result():
     ## compute recommendations
-    restaurant_name = str(request.form['input_text'])
-    cursor = db.restaurants.find({'name' : restaurant_name})
+    restaurant_name = str(request.form['input_text']).lower()
+    cursor = db.restaurants.find({'name_lower' : restaurant_name})
     if cursor.count() == 0:
         return render_template('notfound.html')
     recs, scores = recommender.get_recommendations(restaurant_name, db, 6)

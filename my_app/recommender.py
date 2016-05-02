@@ -91,7 +91,7 @@ class MyRecommender():
         prepare for similarity query. -- needs if word2vec / else tfidf
         '''
         ## Get 1 restaurant menu
-        cursor = db.restaurants.find_one({'name' : name}) #/name/i
+        cursor = db.restaurants.find_one({'name_lower' : name.lower()})
         menu = cursor['menu']
 
         ## Vectorize and prep menu text
