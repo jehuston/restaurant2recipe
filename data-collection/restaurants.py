@@ -15,7 +15,7 @@ def scrape_menu(business_id):
     OUTPUT: HTML from business menu page
 
     '''
-    link = 'https://www.yelp.com/menu/{0}'.format(business_id) ## need some error checking here
+    link = 'https://www.yelp.com/menu/{0}'.format(business_id) 
 
     return requests.get(link)
 
@@ -29,7 +29,6 @@ def get_menu_items(page):
     for ms in soup.select('.menu-item-details'):
         item = ms.h4.text.strip() ## just menu items --> section titles are in .menu-section-header
         menu['items'].append(item)
-        #print item
         if ms.p:
             desc= ms.p.text.strip()
             #print desc
@@ -66,7 +65,6 @@ def get_business_ids(client, page):
     'offset' : page*20
     }
     response = client.search('San Francisco', **params)
-    #print type(response.businesses)
     return response.businesses
 
 def add_to_database(businesses, db):
@@ -92,8 +90,8 @@ def add_to_database(businesses, db):
                 ## build business obj dict
                 bus_obj['bus_id'] = bus.id
                 bus_obj['name'] = bus.name
+                bus_obj['name_lower'] = bus.name.lower()
                 bus_obj['menu'] = menu
-                #print bus_obj
 
                 ##insert into db
                 db.restaurants.insert_one(bus_obj)
@@ -113,7 +111,6 @@ if __name__ == '__main__':
         client = Client(auth)
 
     pages = get_num_response_pages(client)
-    #print pages
     for page in xrange(pages):
         responses = get_business_ids(client, page)
         add_to_database(responses, db)
