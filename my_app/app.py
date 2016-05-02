@@ -1,3 +1,5 @@
+import sys
+from gensim import models
 from flask import Flask, render_template, request, url_for
 from pymongo import MongoClient
 from recommender import MyRecommender
@@ -40,13 +42,17 @@ def result():
 
 if __name__ == '__main__':
     ## connect to db
+    model_name = sys.argv[1] #'word2vec' or 'tfidf'
+    if model_name == 'tfidf':
+        model = models.TfidfModel
+    elif model_name == 'word2vec':
+        model = models.Word2Vec
+
     conn = MongoClient()
     db = conn.project
 
-    ## grab indexed recipe vectors instead of instantiating?
 
-    recommender = MyRecommender()
-    recommender.fit(db) ## OR do I pickle this?? or write to disk with gensim??
-
+    recommender = MyRecommender(model)
+    recommender.fit(db)
     ## run app
     app.run(host = '0.0.0.0', port = 8000, debug = True)

@@ -73,11 +73,12 @@ class MyRecommender():
             doc_vector = np.zeros((300,))
             for j in xrange(len(text_array[i])):
                 try:
-                    doc_vector += self.model[text_array[i][j]] ##Throwing error?
+                    doc_vector += self.model[text_array[i][j]]
                 except KeyError: #if word not in word vectors, skip it
                     unfound_words += 1
                     continue
             doc_vectors.append(doc_vector)
+            #doc_vectors.append(np.divide(doc_vector, text_array.shape[0])) #to average?
         print "Num words not found: ", unfound_words
         return np.array(doc_vectors)
 
@@ -147,7 +148,7 @@ class MyRecommender():
         menu_vector = self._vectorize_restaurant_menu(name, db)
         sims = self.index[menu_vector]
         rec_indices = np.argsort(sims)[:-(num+1):-1] # gets top n
-        return self.df.loc[rec_indices, 'title'], sims[rec_indices]
+        return self.df.loc[rec_indices, 'rec_id'], sims[rec_indices]
 
 
 if __name__ == '__main__':
