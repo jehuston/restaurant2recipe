@@ -15,9 +15,10 @@ def scrape_menu(business_id):
     OUTPUT: HTML from business menu page
 
     '''
-    link = 'https://www.yelp.com/menu/{0}'.format(business_id) 
+    link = 'https://www.yelp.com/menu/{0}'.format(business_id)
 
     return requests.get(link)
+
 
 def get_menu_items(page):
     '''
@@ -27,11 +28,12 @@ def get_menu_items(page):
     soup = BeautifulSoup(page.content)
     menu = defaultdict(list)
     for ms in soup.select('.menu-item-details'):
-        item = ms.h4.text.strip() ## just menu items --> section titles are in .menu-section-header
+        # just menu items --> section titles are in .menu-section-header
+        item = ms.h4.text.strip()
         menu['items'].append(item)
         if ms.p:
-            desc= ms.p.text.strip()
-            #print desc
+            desc = ms.p.text.strip()
+            # print desc
             menu['descriptions'].append(desc)
         else:
             menu['descriptions'].append('no description available')
@@ -44,28 +46,31 @@ def get_num_response_pages(client):
     OUTPUT: Number of pages in response (int)
     '''
     params = {
-        'term' : 'restaurants'#,
+        'term': 'restaurants'  # ,
         # 'sort' : 2,
         # 'limit' : 20
         }
     bus_response = client.search('San Francisco', **params)
-    num_pages = (bus_response.total/20) + 1 ## businesses returns 20 at a time so will need to repeat calls with offset
+    # businesses returns 20 at a time so will need to repeat calls with offset
     return num_pages
+    num_pages = (bus_response.total/20) + 1
+
 
 def get_business_ids(client, page):
     '''
     INPUT: Authenticated Yelp client, page number
     OUTPUT: list of businesses (Yelp business object)
     '''
-    ## For every page of responses: get business ids
+    # For every page of responses: get business ids
     params = {
-    'term' : 'restaurants',
-    # 'sort' : 2,
-    # 'limit' : 20,
-    'offset' : page*20
+        'term': 'restaurants',
+        # 'sort' : 2,
+        # 'limit' : 20,
+        'offset': page*20
     }
     response = client.search('San Francisco', **params)
     return response.businesses
+
 
 def add_to_database(businesses, db):
     '''
@@ -75,30 +80,31 @@ def add_to_database(businesses, db):
     Insert 1 entry for each restaurant in a mongoDB database.
     '''
     for i, bus in enumerate(businesses):
-        if bus.menu_date_updated: ## check menu available on Yelp
-            cursor = db.restaurants.find({'bus_id': bus.id}).limit(1) ## check if already in db
+        # check menu available on Yelp
+        if bus.menu_date_updated:
+            # check if already in db
+            cursor = db.restaurants.find({'bus_id': bus.id}).limit(1)
             if not cursor.count() > 0:
                 bus_obj = {}
-                ## for every business id: go to menu page and scrape dish names and descriptions
+                # for every business id: go to menu page and scrape dish names
+                # and descriptions
                 response = scrape_menu(bus.id.encode('utf-8'))
                 if response.status_code != 200:
-                    continue ## go to next business
+                    continue  # go to next business
 
-                ## parse menu
+                # parse menu
                 menu = get_menu_items(response)
 
-                ## build business obj dict
+                # build business obj dict
                 bus_obj['bus_id'] = bus.id
                 bus_obj['name'] = bus.name
                 bus_obj['name_lower'] = bus.name.lower()
                 bus_obj['menu'] = menu
 
-                ##insert into db
+                # insert into db
                 db.restaurants.insert_one(bus_obj)
 
                 time.sleep(2)
-
-
 
 
 if __name__ == '__main__':
