@@ -40,7 +40,6 @@ def result():
         )
         for r in recipe:
             recipes.append(r)
-    # print recipes
 
     # get full info for recipes from db
     return render_template('results.html', recs=recipes)
