@@ -68,10 +68,10 @@ def run_pipeline(id_list, api_key, db):
     mongoDB.
 
     '''
-    for i, id_ in enumerate(id_list):
-        cursor = db.restaurants.find({'rec_id': id_}).limit(1) ## check if already in db
-        if not cursor.count() > 0:
-            result = get_recipe_info(id_, api_key)
+    for i, rid in enumerate(id_list):
+        cursor = db.restaurants.find_one({'rec_id': rid}) ## check if already in db
+        if not cursor:
+            result = get_recipe_info(rid, api_key)
             r_dict = extract_info(result)
             write_to_database(r_dict, db)
         if i % 200 == 0:
@@ -84,14 +84,16 @@ if __name__ == '__main__':
     client = MongoClient()
     db = client['project']
 
-    ## open pickle file with saved recipe IDs
-    with open('recipe_ids_pt2.pkl') as infile:
-        id_list = pickle.load(infile)
-    ## open api credentials
-    with open('credentials/f2f_config.json') as cred:
-        creds = json.load(cred)
-    print len(id_list)
-    api_key = creds['api-key']
-    ids = id_list[13873:15000] ## 4/22 - update limits for what you want to call that day
+    ## open file with saved recipe IDs
+    with open('recipe_ids.txt') as infile: # next round saved as txt file
+        id_list = [line.strip() for line in infile]
 
+
+    # open api credentials
+    with open('credentials/f2f_config.json') as cred: #AWS path
+    # with open('../credentials/f2f_config.json') as cred: #local path
+        creds = json.load(cred)
+    api_key = creds['api-key']
+
+    ids = id_list[:2000] # 6/10
     run_pipeline(ids, api_key, db)
