@@ -3,6 +3,7 @@
 *.DS_Store
 *.pyc
 *.txt
+scrape_recipe_ids.py
 word-vectors/
 credentials/
 dump/
